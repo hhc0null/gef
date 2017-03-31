@@ -6119,6 +6119,8 @@ class VMMapCommand(GenericCommand):
         else:
             print("{:<23s} {:<23s} {:<23s} {:<4s} {:s}".format(*headers))
 
+        prev_page_end = None
+
         for entry in vmmap:
             l = []
             l.append(format_address(entry.page_start))
@@ -6130,8 +6132,18 @@ class VMMapCommand(GenericCommand):
             else:
                 l.append(str(entry.permission))
 
+            if prev_page_end is not None and prev_page_end != entry.page_start:
+                fmt = "{{:=^{:d}}}".format(len(" ".join(l)))
+                if is_elf64():
+                    gapsize = "{:#018x}".format(entry.page_start - prev_page_end)
+                else:
+                    gapsize = "{:#010x}".format(entry.page_start - prev_page_end)
+                print(Color.colorify(fmt.format(" GAP: "+gapsize+" "), attrs="blink bold yellow"))
+
             l.append(entry.path)
             print(" ".join(l))
+
+            prev_page_end = entry.page_end
         return
 
 
